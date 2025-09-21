@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loading - Stokvel' Sami</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background: #0f5132;
+      color: #ffc107;
+      font-family: 'Courier New', Courier, monospace;
+      flex-direction: column;
+      text-align: center;
+    }
+
+    .typing {
+      border-right: 3px solid #ffc107;
+      white-space: nowrap;
+      overflow: hidden;
+      width: 0;
+      animation: typing 2s steps(30, end) forwards, blink 0.7s step-end infinite;
+      font-size: 1.8rem;
+      margin-bottom: 20px;
+    }
+
+    .app-name {
+      border-right: 3px solid #ffc107;
+      white-space: nowrap;
+      overflow: hidden;
+      width: 0;
+      animation: typing2 2s steps(30, end) forwards;
+      animation-delay: 2s;
+      font-size: 2.5rem;
+      font-weight: bold;
+    }
+
+    @keyframes typing {
+      from { width: 0 }
+      to { width: 270px } /* adjust width for text */
+    }
+    @keyframes typing2 {
+      from { width: 0 }
+      to { width: 200px } /* adjust width for app name */
+    }
+    @keyframes blink {
+      50% { border-color: transparent }
+    }
+  </style>
+</head>
+<body>
+  <div class="typing">Building wealth together</div>
+  <div class="app-name">Stokvel' Sami</div>
+
+  <script>
+    // Redirect after 3.5 seconds
+    setTimeout(function(){
+      window.location.href = "{{ url_for('index') }}";
+    }, 3500);
+  </script>
+</body>
+</html>

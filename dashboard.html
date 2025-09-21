@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Stokvel' Sami</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Montserrat', sans-serif; background-color: #e9f7ef; overflow-x: hidden; transition: background 0.3s, color 0.3s; }
+
+    /* Sidebar */
+    #sidebar { position: fixed; top: 0; left: -260px; width: 260px; height: 100%; background-color: #0f5132; color: #fff; transition: all 0.4s; z-index: 1000; padding-top: 70px; box-shadow: 2px 0 5px rgba(0,0,0,0.1); }
+    #sidebar.active { left: 0; }
+    #sidebar .nav-link { color: #fff; font-weight: 500; padding: 12px 20px; display: flex; align-items: center; transition: 0.3s; }
+    #sidebar .nav-link:hover { background-color: #ffc107; color: #0f5132; border-radius: 8px; }
+
+    /* Overlay */
+    #sidebar-overlay { position: fixed; display: none; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 999; }
+
+    /* Page Content */
+    #content { margin-left: 0; padding: 20px; transition: all 0.4s; }
+    #content.active { margin-left: 260px; }
+
+    /* Navbar */
+    .navbar-custom { background-color: #0f5132; color: white; padding: 0.8rem 1rem; border-radius: 0 0 10px 10px; margin-bottom: 20px; }
+    .navbar-custom .btn-toggle { background-color: #ffc107; border: none; }
+
+    /* Greeting */
+    .greeting { text-align: center; margin-bottom: 1.5rem; }
+    .profile-pic { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #ffc107; margin-bottom: 10px; }
+
+    /* Quick Actions */
+    .card-action { border-radius: 15px; cursor: pointer; transition: transform 0.3s ease, box-shadow 0.3s ease; background: #fff; }
+    .card-action:hover { transform: translateY(-8px); box-shadow: 0 15px 25px rgba(0,0,0,0.2); }
+    .card-action i { font-size: 2.5rem; transition: transform 0.4s ease; }
+    .card-action:hover i { transform: rotate(15deg) scale(1.2); }
+
+    /* Stokvel Cards */
+    .stokvel-card { border-radius: 15px; background: #fff; padding: 20px; transition: 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+    .stokvel-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
+
+    /* Progress Bar */
+    .progress { height: 20px; border-radius: 10px; overflow: hidden; }
+
+    /* Wealth Overview Cards */
+    .wealth-card { border-radius: 15px; padding: 20px; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+    .wealth-card h3 { font-weight: 700; margin-top: 10px; }
+
+    /* Dark Mode */
+    body.dark-mode { background-color: #121212; color: #eee; }
+    body.dark-mode #sidebar { background-color: #1c1c1c; }
+    body.dark-mode .card-action, body.dark-mode .stokvel-card { background: #1f1f1f; color: #fff; }
+    body.dark-mode .navbar-custom { background-color: #1c1c1c; }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <div id="sidebar">
+    <ul class="nav flex-column ps-3">
+      <li class="nav-item mb-2"><a class="nav-link" href="#"><i class="bi bi-person-circle me-2"></i>Profile</a></li>
+      <li class="nav-item mb-2"><a class="nav-link" href="#"><i class="bi bi-pencil-square me-2"></i>Update Info</a></li>
+      <li class="nav-item mb-2"><a class="nav-link" href="#"><i class="bi bi-bar-chart-line me-2"></i>Financial Goals</a></li>
+      <li class="nav-item mb-2"><a class="nav-link" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+    </ul>
+  </div>
+
+  <!-- Overlay -->
+  <div id="sidebar-overlay"></div>
+
+  <!-- Page Content -->
+  <div id="content">
+    <!-- Navbar -->
+    <nav class="navbar navbar-custom d-flex align-items-center">
+      <button class="btn btn-toggle me-3" id="sidebarCollapse"><i class="bi bi-list"></i></button>
+      <h4 class="mb-0 text-white">Dashboard</h4>
+      <button class="btn btn-sm btn-warning ms-auto" id="darkModeToggle">Dark Mode</button>
+    </nav>
+
+    <!-- Greeting -->
+    <div class="greeting">
+      {% if profile_pic %}
+        <img src="{{ url_for('static', filename='uploads/' + profile_pic) }}" class="profile-pic" alt="Profile Picture">
+      {% else %}
+        <img src="{{ url_for('static', filename='MgrowthLogo.jpg') }}" class="profile-pic" alt="Profile Picture">
+      {% endif %}
+      <h2>Welcome, {{ firstname }}!</h2>
+      <p class="text-success fw-bold">💰 Every contribution grows your wealth. Stay consistent and watch your goals come alive!</p>
+      <p id="greeting-time"></p>
+    </div>
+
+    <!-- Wealth Overview -->
+    <div class="container mb-5">
+      <div class="row g-3 text-center">
+        <div class="col-md-4">
+          <div class="wealth-card bg-success">
+            <h6>Total Contributions</h6>
+            <h3>R{{ stokvels | sum(attribute='current_amount') }}</h3>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="wealth-card bg-warning text-dark">
+            <h6>Total Members</h6>
+            <h3>{{ stokvels | sum(attribute='current_members') }}</h3>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="wealth-card bg-info">
+            <h6>Targets Achieved</h6>
+            <h3>
+              {% set total_target = stokvels | sum(attribute='target_amount') %}
+              {% if total_target > 0 %}
+                {% set total_current = stokvels | sum(attribute='current_amount') %}
+                {{ ((total_current / total_target) * 100) | round(0) }}%
+              {% else %}
+                0%
+              {% endif %}
+            </h3>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="container mb-5">
+      <div class="row g-4">
+        <div class="col-md-6">
+          <a href="{{ url_for('create_stokvel') }}" style="text-decoration: none; color: inherit;">
+            <div class="card card-action text-center p-4">
+              <i class="bi bi-people-fill text-success mb-3"></i>
+              <h5>Create Stokvel Group</h5>
+              <p>Start your own group and manage members easily.</p>
+            </div>
+          </a>
+        </div>
+        <div class="col-md-6">
+          <a href="{{ url_for('join_stokvel') }}" style="text-decoration: none; color: inherit;">
+            <div class="card card-action text-center p-4">
+              <i class="bi bi-person-plus-fill text-success mb-3"></i>
+              <h5>Join Stokvel Group</h5>
+              <p>Find a group to join and contribute securely.</p>
+            </div>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- My Stokvels -->
+    <div class="container">
+      <h4 class="mb-4">📌 My Stokvel Groups</h4>
+      <div class="row g-4">
+        {% for stokvel in stokvels %}
+        {% set percentage = stokvel.progress_percentage %}
+        {% set progress_style = 'width: ' ~ percentage ~ '%' %}
+        <div class="col-md-6 col-lg-4">
+          <div class="card stokvel-card">
+            <div class="d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">{{ stokvel.name }}</h5>
+              {% if stokvel.grow_with_sami %}
+                <span class="badge bg-warning">🔥 Growing with Sami</span>
+              {% endif %}
+            </div>
+            <p class="text-muted mt-2">{{ stokvel.description }}</p>
+            <ul class="list-unstyled small">
+              <li><i class="bi bi-people me-2"></i> Members: {{ stokvel.current_members }} / {{ stokvel.max_members }}</li>
+              <li><i class="bi bi-cash-coin me-2"></i> Target: R{{ stokvel.target_amount }}</li>
+              <li><i class="bi bi-wallet2 me-2"></i> Contribution: R{{ stokvel.monthly_contribution }} / month</li>
+              <li><i class="bi bi-clock-history me-2"></i> Created: {{ stokvel.created_at }}</li>
+            </ul>
+            <div class="progress mt-2">
+              <div class="progress-bar {% if percentage < 50 %}bg-danger{% elif percentage < 80 %}bg-warning{% else %}bg-success{% endif %}" 
+                   role="progressbar" style="{{ progress_style }}"
+                   aria-valuenow="{{ percentage }}" aria-valuemin="0" aria-valuemax="100">
+                {{ percentage }}%
+              </div>
+            </div>
+            {% if percentage >= 80 %}
+              <span class="badge bg-danger mt-2 d-block">🔥 Almost there!</span>
+            {% endif %}
+          </div>
+        </div>
+        {% else %}
+          <p class="text-muted">You haven’t created or joined any stokvel groups yet.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Sidebar toggle
+    const sidebar = document.getElementById('sidebar');
+    const content = document.getElementById('content');
+    const sidebarCollapse = document.getElementById('sidebarCollapse');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
+
+    sidebarCollapse.addEventListener('click', () => {
+      sidebar.classList.toggle('active');
+      content.classList.toggle('active');
+      sidebarOverlay.style.display = sidebar.classList.contains('active') ? 'block' : 'none';
+    });
+    sidebarOverlay.addEventListener('click', () => {
+      sidebar.classList.remove('active');
+      content.classList.remove('active');
+      sidebarOverlay.style.display = 'none';
+    });
+
+    // Dynamic greeting
+    const greetingEl = document.getElementById('greeting-time');
+    const hour = new Date().getHours();
+    let greet = 'Have a great day!';
+    if(hour < 12) greet = 'Good Morning!';
+    else if(hour < 18) greet = 'Good Afternoon!';
+    else greet = 'Good Evening!';
+    greetingEl.textContent = greet + ' Start building your wealth with friends who share your goals.';
+
+    // Dark mode toggle
+    const toggle = document.getElementById('darkModeToggle');
+    toggle.addEventListener('click', () => {
+      document.body.classList.toggle('dark-mode');
+    });
+  </script>
+</body>
+</html>
+
